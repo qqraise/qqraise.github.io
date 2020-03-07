@@ -16,7 +16,7 @@
 改善了回归目标
 1. 正则化的学习目标(Regularized Learning Objective)
 
-    对于有n个样本，m个特征的数据集合 $\mathcal{D} = \left \{ \left (  \textbf{x}_i,y_i \right ) \right \} \left ( \left | \mathcal{D}\right | = n,  \textbf{x}_i\in{\mathbb{R}^m}, y_i\in\mathbb{R}  \right )$ ，树提升方法由$K$个输出相加预测目标，即：
+    对于有n个样本，m个特征的数据集合 $$\mathcal{D} = \left \{ \left (  \textbf{x}_i,y_i \right ) \right \} \left ( \left | \mathcal{D}\right | = n,  \textbf{x}_i\in{\mathbb{R}^m}, y_i\in\mathbb{R}  \right )$$ ，树提升方法由$K$个输出相加预测目标，即：
 
     $$y_i =\phi\left ( \textbf{x}_i \right ) =  \sum_{k=1}^{k} f_k\left ( \textbf{x}_i \right ), f_k\in\mathcal{F}$$
 
