@@ -6,6 +6,8 @@
 
 ## Xgboost
 
+只依赖于每个数据点的在目标函数上的一阶和二阶导数
+
 ###   TREE BOOSTING IN A NUTSHELL
 
 改善了回归目标
@@ -46,8 +48,31 @@
     **计算方法为二次函数极值**，即$ax^2+bx+c$，极值点为$x=-\frac{b}{2a}$，极值为$c-\frac{b^2}{4a}$,对于固定的树结构$q\left( \textbf{x} \right)$。对应$j$计算出最优打分$w^{*}_{j}$的取值为:
     $$w^{*}_{j} = -\frac{\sum_{i\in{I_j}}g_i}{\sum_{i\in{I_j}}h_i+\lambda}$$
     对所有叶子节点，对应的最优打分为(外面加一个sum)：
-    $$\tilde{\mathcal{L}}^{\left ( t \right )} \left( q\right ) = -\frac{1}{2} \sum^{T}_{j=1} \frac{\left( \sum_{i\in{I_j}}g_i \right)^2}{\sum_{i\in{i_j}}h_i+\lambda} + \gamma T$$
+    $$\tilde{\mathcal{L}}^{\left( t \right)} \left( q\right ) = -\frac{1}{2} \sum^{T}_{j=1} \frac{\left( \sum_{i\in{I_j}}g_i \right)^2}{\sum_{i\in{I_j}}h_i+\lambda} + \gamma T$$
+    就像使用不纯度衡量决策树一样，上式可以作为评价一个确定树结构$q$打分质量的评价函数，和不纯度相比不同的的目标函数都可以推导出上式。
+    ![](/images/xgb_figure2.png "结构分图")
+
+    通常不可能枚举所有可能的树结构。取而代之的是一个贪婪算法，它从一个节点开始，迭代地向树中添加分支。假设分裂后的左右节点的样本集合是$I_L$和$I_R$，原始集合是$I$，本次损失降低的值可以表达为：
+    $$\mathcal{L}_{split} = \frac{1}{2} \left[ \frac{\left( \sum_{i\in{I_L}}g_i \right)^2}{\sum_{i\in{I_L}}h_i+\lambda} + \frac{\left( \sum_{i\in{I_R}}g_i \right)^2}{\sum_{i\in{I_R}}h_i+\lambda} -\frac{\left( \sum_{i\in{I}}g_i \right)^2}{\sum_{i\in{i}}h_i+\lambda} \right] - \lambda$$
+    这个公式通常在实践中用于评估候选分裂。
+
+3. 树缩减和列采样(Shrinkage and Column Subsampling)
+
+    * Shrinkage是指每一棵新增的树都乘以一个缩减系数$\eta$
+    * 列采样和RF中一样不使用所有特征
+
+    防止过拟合和提升并行计算的速度
+
+
 ### SPLIT FINDING ALGORITHMS
 
+1. Basic Exact Greedy Algorithm
 
+    树学习的核心问题是寻找$\mathcal{L}_{split}$最佳的分裂方式。一种分裂方式是在左右特征中枚举所有可能的样本分裂。对于连续特征要枚举所有的值，因此对于连续特征排序是非常必要的。
+  ![](/images/xgb_split1.png "分裂算法1")
+2. Approximate Algorithm
+
+    精确贪心算法非常强大，因为它会贪心地枚举所有可能的分裂点。 但是，当数据不能完全放入内存时，不可能有效地执行此操作。
+3. Weighted Quantile Sketch
+4. Sparsity-aware Split Finding
 
