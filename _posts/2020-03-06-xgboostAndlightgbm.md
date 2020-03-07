@@ -2,6 +2,7 @@
   - [Xgboost](#xgboost)
     - [TREE BOOSTING IN A NUTSHELL](#tree-boosting-in-a-nutshell)
     - [SPLIT FINDING ALGORITHMS](#split-finding-algorithms)
+    - [SYSTEM DESIGN](#system-design)
 # 树提升方法
 
 ## Xgboost
@@ -72,7 +73,7 @@
     ![](/images/xgb_figure2.png "结构分图")
 
     通常不可能枚举所有可能的树结构。取而代之的是一个贪婪算法，它从一个节点开始，迭代地向树中添加分支。假设分裂后的左右节点的样本集合是$I_L$和$I_R$，原始集合是$I$，本次损失降低的值可以表达为：
-    
+
     $$\mathcal{L}_{split} = \frac{1}{2} \left[ \frac{\left( \sum_{i\in{I_L}}g_i \right)^2}{\sum_{i\in{I_L}}h_i+\lambda} + \frac{\left( \sum_{i\in{I_R}}g_i \right)^2}{\sum_{i\in{I_R}}h_i+\lambda} -\frac{\left( \sum_{i\in{I}}g_i \right)^2}{\sum_{i\in{i}}h_i+\lambda} \right] - \lambda$$
 
     这个公式通常在实践中用于评估候选分裂。
@@ -90,10 +91,35 @@
 1. Basic Exact Greedy Algorithm
 
     树学习的核心问题是寻找$\mathcal{L}_{split}$最佳的分裂方式。一种分裂方式是在左右特征中枚举所有可能的样本分裂。对于连续特征要枚举所有的值，因此对于连续特征排序是非常必要的。
-  ![](/images/xgb_split1.png "分裂算法1")
+  ![](/images/xgb_split1.png "精确贪心算法")
 2. Approximate Algorithm
 
-    精确贪心算法非常强大，因为它会贪心地枚举所有可能的分裂点。 但是，当数据不能完全放入内存时，不可能有效地执行此操作。
+    精确贪心算法非常强大，因为它会贪心地枚举所有可能的分裂点。 但是，当数据不能完全放入内存时，不可能有效地执行此操作，分布式环境也是如此。近似算法将连续值根据分位数计算统计值，然后根据统计数据计算分裂点proposal。有两种proposal的方式:
+    * GLOBAL：在建树之前就做proposal然后之后每次分割都要更新一下proposal
+    * LOCAL：每次split之后更新proposal
+
+    通常发现local的方法需要更少的candidate，而global的方法在有足够的candidate的时候(eta比较小的时候)效果跟local差不多
+
+    也有可能使用分箱策略的其他变体代替分位数。 分位数策略优点是可重复利用、可分布式计算
+
+ ![](/images/xgb_split2.png "近似算法")
+
 3. Weighted Quantile Sketch
+
+  近似算法的一个重要步骤是提出候选分割点。
+
+
 4. Sparsity-aware Split Finding
+
+    造成稀疏性的原因有多种:1. 数据中存在缺失值;2. 统计中常出现的0;3. 特征工程造成，如:onehot；为了处理，我们建议在每个树节点中添加一个默认方向(默认分支)， 当稀疏矩阵$x$中出现缺失值时，**样本将划分到默认分支**。每次分裂有两个默认分支可选，最优选择由数据决定。
+
+![](/images/xgb_split2.png "稀疏数据处理")
+
+###  SYSTEM DESIGN
+  1. Column Block for Parallel Learning
+  2. Cache-aware Access
+  3. Blocks for Out-of-core Computation
+
+
+
 
